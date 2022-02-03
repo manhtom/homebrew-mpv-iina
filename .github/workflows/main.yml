@@ -19,32 +19,30 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Tap mpv-iina
-        shell: zsh {0}
+      - name: Prepare homebrew
         run: |
-          brew tap iina/homebrew-mpv-iina
+          echo $PWD
           brew developer on
-
-      - name: Prepare sd
-        shell: zsh {0}
-        run: |
-          brew install sd
-
-      - name: Run compile.rb
-        shell: zsh {0}
-        run: |
-          cd other
-          echo $PWD
-          chmod +x compile.rb
-          ./compile.rb
-
-      - name: Run change_lib_dependencies.rb
+          brew update
+          sed -i.bak 's/self\["HOMEBREW_ARCHFLAGS"\] = ""/&\nself["MACOSX_DEPLOYMENT_TARGET"] = "10.15"/' $(brew --prefix)/Homebrew/Library/Homebrew/extend/ENV/super.rb
+          sed -i.bak 's/HOMEBREW_MACOS_VERSION=.*/HOMEBREW_MACOS_VERSION="10.15.1"/' $(brew --prefix)/Homebrew/Library/Homebrew/brew.sh
+          brew uninstall $(brew ls --formula)
+      
+      - name: Build mpv & iina
         run: |
           echo $PWD
-          mkdir deps
-          wget 'https://raw.githubusercontent.com/iina/iina/master/other/change_lib_dependencies.rb' -P other
-          chmod +x other/change_lib_dependencies.rb
-          other/change_lib_dependencies.rb "$(brew --prefix)" "$(brew --prefix mpv-iina)/lib/libmpv.dylib"
+          # Make brew use our IINA FFmpeg and mpv formulas.
+          cp *-iina.rb "$(brew --repo homebrew/core)/Formula"
+          # Brew will build for the macOS version running on the local machine.
+          env HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install --build-from-source ffmpeg-iina mpv-iina
+
+      - name: Run change_lib_dependencies.rb & parse_doc.rb
+        run: |
+          echo $PWD
+          rm -rf deps/include && mkdir -p deps/include
+          cp -R "$(brew --prefix ffmpeg-iina)/include/"* "$(brew --prefix mpv-iina)/include/mpv" deps/include/
+          /usr/bin/ruby change_lib_dependencies.rb "$(brew --prefix)" "$(brew --prefix mpv-iina)/lib/libmpv.dylib"
+          /usr/bin/ruby parse_doc.rb
           
       - name: Archive libs
         uses: actions/upload-artifact@v2
