@@ -17,6 +17,7 @@ EOS
   depends_on "pkg-config" => :build
   depends_on "dav1d"
   depends_on "freetype"
+  depends_on "libass"
   depends_on "xz"
 
   uses_from_macos "bzip2"
@@ -37,6 +38,8 @@ EOS
       --enable-lto
       --enable-libdav1d
       --enable-videotoolbox
+      --enable-libfreetype
+      --enable-libass
       --disable-debug
       --disable-doc
       --disable-libjack
