@@ -23,13 +23,14 @@ jobs:
         run: |
           brew developer on
           brew update
-      
+
       - name: Build ffmpeg & mpv
         run: |
           # Make brew use our IINA FFmpeg and mpv formulas.
           cp *-iina.rb "$(brew --repo homebrew/core)/Formula"
           # Brew will build for the macOS version running on the local machine.
-          env HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install --build-from-source ffmpeg-iina mpv-iina
+          env HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install --build-from-source ffmpeg-iina
+          env HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install mpv-iina --HEAD
 
       - name: Run change_lib_dependencies.rb & parse_doc.rb
         run: |
@@ -37,7 +38,7 @@ jobs:
           cp -R "$(brew --prefix ffmpeg-iina)/include/"* "$(brew --prefix mpv-iina)/include/mpv" deps/include/
           /usr/bin/ruby other/change_lib_dependencies.rb "$(brew --prefix)" "$(brew --prefix mpv-iina)/lib/libmpv.dylib"
           /usr/bin/ruby other/parse_doc.rb
-          
+
       - name: Archive libs
         uses: actions/upload-artifact@v2
         with:
