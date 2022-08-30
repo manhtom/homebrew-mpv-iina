@@ -47,6 +47,7 @@ EOS
       --disable-libjack
       --disable-indev=jack
       --disable-programs
+      --disable-xlib
     ]
 
     system "./configure", *args

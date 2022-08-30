@@ -14,7 +14,7 @@ class MpvIina < Formula
 
   depends_on "docutils" => :build
   depends_on "pkg-config" => :build
-  depends_on "python@3.9" => :build
+  depends_on "python" => :build
   depends_on xcode: :build
 
   depends_on "ffmpeg-iina"
@@ -22,7 +22,7 @@ class MpvIina < Formula
   depends_on "libarchive"
   depends_on "libass"
   depends_on "little-cms2"
-  depends_on "luajit-openresty"
+  depends_on "luajit"
   depends_on "libbluray"
   depends_on "mujs"
   depends_on "uchardet"
@@ -38,8 +38,7 @@ class MpvIina < Formula
 
     # libarchive is keg-only
     ENV.prepend_path "PKG_CONFIG_PATH", Formula["libarchive"].opt_lib/"pkgconfig"
-    # luajit-openresty is key-only
-    ENV.prepend_path "PKG_CONFIG_PATH", Formula["luajit-openresty"].opt_lib/"pkgconfig"
+    ENV.prepend_path "PKG_CONFIG_PATH", Formula["luajit"].opt_lib/"pkgconfig"
 
     ENV["CFLAGS"] = "-O3 -flto"
     ENV["LDFLAGS"] = "-flto"
@@ -62,9 +61,9 @@ class MpvIina < Formula
       --lua=luajit
     ]
 
-    system Formula["python@3.9"].opt_bin/"python3", "bootstrap.py"
-    system Formula["python@3.9"].opt_bin/"python3", "waf", "configure", *args
-    system Formula["python@3.9"].opt_bin/"python3", "waf", "install"
+    system Formula["python"].opt_bin/"python3", "bootstrap.py"
+    system Formula["python"].opt_bin/"python3", "waf", "configure", *args
+    system Formula["python"].opt_bin/"python3", "waf", "install"
   end
 
   test do
