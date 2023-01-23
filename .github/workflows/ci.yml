@@ -1,0 +1,63 @@
+name: Build Intel deps
+on:
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: "Log level"
+        required: true
+        default: "warning"
+  push:
+    branches:
+      - master
+
+jobs:
+  build-x64:
+    runs-on:
+      - macos-10.15
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Prepare homebrew
+        run: |
+          brew developer on
+          brew update
+
+      - name: Build ffmpeg & mpv
+        run: |
+          # Make brew use our IINA FFmpeg and mpv formulas.
+          cp *-iina.rb "$(brew --repo homebrew/core)/Formula"
+          # Brew will build for the macOS version running on the local machine.
+          env HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install --build-from-source ffmpeg-iina
+          env HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install mpv-iina --HEAD
+
+      - name: Run change_lib_dependencies.rb & parse_doc.rb
+        run: |
+          rm -rf deps/include && mkdir -p deps/include
+          cp -R "$(brew --prefix ffmpeg-iina)/include/"* "$(brew --prefix mpv-iina)/include/mpv" deps/include/
+          /usr/bin/ruby other/change_lib_dependencies.rb "$(brew --prefix)" "$(brew --prefix mpv-iina)/lib/libmpv.dylib"
+          /usr/bin/ruby other/parse_doc.rb
+
+      - name: Archive libs
+        uses: actions/upload-artifact@v2
+        with:
+          name: deps-x86_64
+          path: deps/
+
+  build-arm64:
+    runs-on:
+      - self-hosted
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Run change_lib_dependencies.rb & parse_doc.rb
+        run: |
+          rm -rf deps/include && mkdir -p deps/include
+          cp -R "$(brew --prefix ffmpeg-iina)/include/"* "$(brew --prefix mpv-iina)/include/mpv" deps/include/
+          /usr/bin/ruby other/change_lib_dependencies.rb "$(brew --prefix)" "$(brew --prefix mpv-iina)/lib/libmpv.dylib"
+          /usr/bin/ruby other/parse_doc.rb
+
+      - name: Archive libs
+        uses: actions/upload-artifact@v2
+        with:
+          name: deps-arm64
+          path: deps/
