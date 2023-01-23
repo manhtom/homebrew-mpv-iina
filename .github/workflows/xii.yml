@@ -1,0 +1,31 @@
+name: Build deps
+on:
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: "Log level"
+        required: true
+        default: "warning"
+  push:
+    branches:
+      - master
+
+jobs:
+  build-arm64:
+    runs-on:
+      - self-hosted
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Run change_lib_dependencies.rb & parse_doc.rb
+        run: |
+          rm -rf deps/include && mkdir -p deps/include
+          cp -R "$(brew --prefix ffmpeg-iina)/include/"* "$(brew --prefix mpv-iina)/include/mpv" deps/include/
+          /usr/bin/ruby other/change_lib_dependencies.rb "$(brew --prefix)" "$(brew --prefix mpv-iina)/lib/libmpv.dylib"
+          /usr/bin/ruby other/parse_doc.rb
+
+      - name: Archive libs
+        uses: actions/upload-artifact@v2
+        with:
+          name: deps-arm64
+          path: deps/
